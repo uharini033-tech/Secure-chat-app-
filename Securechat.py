@@ -1,44 +1,62 @@
-# Secure Chat Application (End-to-End Encrypted)
+import socket
+import threading
 
-##  Project Overview
-The **Secure Chat Application** is a Python-based messaging system that enables **secure, encrypted communication between two users**.  
-The project demonstrates the implementation of **end-to-end encryption (E2EE)** using cryptographic techniques and socket programming.
+# Receive messages
+def receive_messages(conn):
+    while True:
+        try:
+            msg = conn.recv(1024).decode()
+            if not msg:
+                break
+            print("\nFriend:", msg)
+        except:
+            break
 
-This project was developed as part of the **RISE Internship – Cybersecurity & Ethical Hacking** program.
+# Server
+def start_server():
+    host = "127.0.0.1"
+    port = 12345
 
----
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind((host, port))
+    server.listen(1)
 
-## Problem Statement
-Most conventional chat applications do not offer **end-to-end encryption by default**, making user messages vulnerable to:
-- Unauthorized access
-- Man-in-the-middle attacks
-- Data interception
+    print("Server started. Waiting for connection...")
+    conn, addr = server.accept()
+    print("Connected with:", addr)
 
----
+    threading.Thread(target=receive_messages, args=(conn,)).start()
 
-## Objective
-The main objective of this project is to:
-- Develop a secure chat application
-- Ensure messages are encrypted before transmission
-- Allow decryption only at the receiver’s end
-- Demonstrate secure communication practices
+    while True:
+        msg = input("You: ")
+        conn.send(msg.encode())
 
----
+# Client
+def start_client():
+    host = "127.0.0.1"
+    port = 12345
 
-##  Technologies Used
-- **Programming Language:** Python  
-- **Networking:** Socket Programming  
-- **Cryptography:** RSA / PyCryptodome  
-- **GUI (Optional):** Tkinter / PyQt  
-- **Operating System:** Windows / Linux  
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect((host, port))
 
----
+    print("Connected to server")
 
-## System Requirements
-- Python 3.x
-- PyCryptodome library
-- Basic understanding of networking and cryptography
+    threading.Thread(target=receive_messages, args=(client,)).start()
 
-### Installation
-```bash
-pip install pycryptodome 
+    while True:
+        msg = input("You: ")
+        client.send(msg.encode())
+
+# Main
+print("Simple Chat Application")
+print("1. Start Server")
+print("2. Start Client")
+
+choice = input("Enter choice (1 or 2): ")
+
+if choice == "1":
+    start_server()
+elif choice == "2":
+    start_client()
+else:
+    print("Invalid choice")
